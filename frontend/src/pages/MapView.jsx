@@ -40,7 +40,8 @@ export default function MapView() {
   const [latestData, setLatestData] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const CENTER = [40.2167, 29.0833];
+  // BTU Mimar Sinan Yerleşkesi merkezi
+  const CENTER = [40.2378, 29.0076];
 
   useEffect(() => {
     connectSocket();
@@ -112,7 +113,7 @@ export default function MapView() {
       <div className="card p-0 overflow-hidden" style={{ height: 'calc(100vh - 200px)', minHeight: '500px' }}>
         <MapContainer
           center={CENTER}
-          zoom={16}
+          zoom={14}
           style={{ height: '100%', width: '100%' }}
           className="z-0"
         >
@@ -121,25 +122,36 @@ export default function MapView() {
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a>'
           />
 
-          {/* Restricted zone polygons */}
-          {zones.map((zone, i) => (
-            <Polygon
-              key={i}
-              positions={zone.polygon.map((p) => [p.lat, p.lng])}
-              pathOptions={{ color: zone.color || '#ef4444', fillColor: zone.color || '#ef4444', fillOpacity: 0.2, weight: 2 }}
-            >
-              <Popup>
-                <div className="text-slate-900">
-                  <p className="font-bold">⛔ {zone.name}</p>
-                  <p className="text-xs text-red-600">Restricted Zone</p>
-                </div>
-              </Popup>
-            </Polygon>
-          ))}
+          {/* Zone polygon'ları */}
+          {zones.map((zone, i) => {
+            const isCampus = zone.type === 'safe';
+            const icon = isCampus ? '🏫' : zone.type === 'critical' ? '🔴' : zone.type === 'lab' ? '🔬' : zone.type === 'emergency' ? '🚨' : '⛔';
+            const label = isCampus ? 'Yerleşke Sınırı' : zone.type === 'critical' ? 'Kritik Alan' : zone.type === 'lab' ? 'Laboratuvar' : zone.type === 'emergency' ? 'Acil Toplanma' : 'Yasak Bölge';
+            return (
+              <Polygon
+                key={i}
+                positions={zone.polygon.map((p) => [p.lat, p.lng])}
+                pathOptions={{
+                  color: zone.color || '#ef4444',
+                  fillColor: zone.color || '#ef4444',
+                  fillOpacity: isCampus ? 0.08 : 0.2,
+                  weight: isCampus ? 2 : 2,
+                  dashArray: isCampus ? '6 4' : null
+                }}
+              >
+                <Popup>
+                  <div className="text-slate-900">
+                    <p className="font-bold">{icon} {zone.name}</p>
+                    <p className="text-xs mt-0.5" style={{ color: zone.color || '#ef4444' }}>{label}</p>
+                  </div>
+                </Popup>
+              </Polygon>
+            );
+          })}
 
-          {/* Device markers */}
+          {/* Device markers — sadece aktif (online) cihazlar */}
           {devices
-            .filter((d) => d.location?.lat != null)
+            .filter((d) => d.status === 'active' && d.location?.lat != null)
             .map((device) => {
               const data = latestData[device._id];
               const risk = data?.riskScore ?? 0;
@@ -163,22 +175,18 @@ export default function MapView() {
                         {data && (
                           <>
                             <div className="flex justify-between">
-                              <span>Audio:</span>
+                              <span>Ses:</span>
                               <span>{data.sensors?.audioLevel?.toFixed(1)} dB</span>
                             </div>
                             <div className="flex justify-between">
-                              <span>Risk Score:</span>
+                              <span>Risk:</span>
                               <span className="font-bold">{data.riskScore}</span>
                             </div>
                           </>
                         )}
-                        <div className="flex justify-between">
-                          <span>Battery:</span>
-                          <span>{device.batteryLevel}%</span>
-                        </div>
                         {device.location && (
                           <div className="flex justify-between">
-                            <span>GPS:</span>
+                            <span>Konum:</span>
                             <span className="font-mono">{device.location.lat.toFixed(5)}, {device.location.lng.toFixed(5)}</span>
                           </div>
                         )}

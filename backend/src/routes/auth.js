@@ -6,6 +6,7 @@ const { body } = require('express-validator');
 const User = require('../models/User');
 const { authenticate } = require('../middleware/auth');
 const validate = require('../middleware/validate');
+const InviteCode = require('../models/InviteCode');
 
 const SALT_ROUNDS = 12;
 
@@ -27,12 +28,41 @@ router.post('/register', registerRules, validate, async (req, res) => {
 
     const existing = await User.findOne({ $or: [{ email }, { username }] });
     if (existing) {
-      return res.status(400).json({ success: false, error: 'Username or email already exists' });
+      return res.status(400).json({ success: false, error: 'Bu kullanıcı adı veya email zaten kullanımda' });
+    }
+
+    // Admin rolü oluşturulamaz (sadece seed ile gelir)
+    if (role === 'admin') {
+      return res.status(403).json({ success: false, error: 'Admin hesabı oluşturulamaz.' });
+    }
+
+    // Operator olmak için geçerli davet kodu gerekli
+    let finalRole = 'viewer';
+    if (role === 'operator') {
+      const { invite_code } = req.body;
+      if (!invite_code) {
+        return res.status(400).json({ success: false, error: 'Operatör kaydı için davet kodu gerekli.' });
+      }
+      const invite = await InviteCode.findOne({ code: invite_code.toUpperCase(), isUsed: false });
+      if (!invite) {
+        return res.status(400).json({ success: false, error: 'Geçersiz veya kullanılmış davet kodu.' });
+      }
+      finalRole = 'operator';
+      // Kodu kullanıldı olarak işaretle (kullanıcı kaydedildikten sonra)
+      invite._pendingUse = true;
+      req._invite = invite;
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = new User({ username, email, passwordHash, role: role || 'viewer' });
+    const user = new User({ username, email, passwordHash, role: finalRole });
     await user.save();
+
+    // Davet kodunu kullanıldı olarak işaretle
+    if (req._invite) {
+      req._invite.isUsed = true;
+      req._invite.usedBy = user._id;
+      await req._invite.save();
+    }
 
     const token = jwt.sign(
       { userId: user._id },

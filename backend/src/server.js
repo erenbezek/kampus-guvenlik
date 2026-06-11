@@ -1,4 +1,7 @@
 require('dotenv').config();
+// Node.js'e Google DNS kullandır — SRV sorguları için gerekli
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
 const http = require('http');
 const { Server } = require('socket.io');
 
@@ -7,6 +10,7 @@ const connectDB = require('./config/database');
 const socketHandler = require('./socket/socketHandler');
 const notification = require('./services/notificationService');
 const { checkOfflineDevices } = require('./services/anomalyDetector');
+const { startSimulator } = require('./services/sensorSimulator');
 const logger = require('./utils/logger');
 const runSeed = require('./scripts/seedData');
 
@@ -14,42 +18,34 @@ const PORT = process.env.PORT || 3001;
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
 async function getMongoUri() {
-  // If a real URI is set and reachable, use it
-  if (process.env.MONGODB_URI && process.env.MONGODB_URI !== 'mongodb://localhost:27017/campus_safety') {
-    return process.env.MONGODB_URI;
-  }
-
-  // Try connecting to local MongoDB first
   const mongoose = require('mongoose');
+  const configuredUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/campus_safety';
+
+  // Atlas veya local URI'yi dene
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus_safety', {
-      serverSelectionTimeoutMS: 2000
-    });
+    await mongoose.connect(configuredUri, { serverSelectionTimeoutMS: 5000 });
     await mongoose.disconnect();
-    logger.info('Local MongoDB found — using mongodb://localhost:27017/campus_safety');
-    return process.env.MONGODB_URI || 'mongodb://localhost:27017/campus_safety';
-  } catch (_) {
-    // Fall through to in-memory
+    logger.info(`MongoDB bağlantısı başarılı: ${configuredUri.replace(/:\/\/.*@/, '://***@')}`);
+    return configuredUri;
+  } catch (err) {
+    logger.warn(`MongoDB bağlantısı başarısız (${err.message})`);
   }
 
-  // No local MongoDB — start in-memory server (dev only)
+  // Fallback: in-memory (dev)
   if (IS_DEV) {
     const { MongoMemoryServer } = require('mongodb-memory-server');
-    logger.warn('Local MongoDB not found. Starting in-memory MongoDB...');
+    logger.warn('Kalıcı MongoDB bulunamadı — geçici bellek-içi DB başlatılıyor...');
     const mongod = new MongoMemoryServer({ instance: { dbName: 'campus_safety' } });
     await mongod.start();
     const uri = mongod.getUri();
-    logger.info(`In-memory MongoDB started: ${uri}`);
-    logger.warn('NOTE: Data is NOT persisted between restarts in in-memory mode.');
-
-    // Keep reference so it doesn't get GC'd
+    logger.info(`In-memory MongoDB başlatıldı: ${uri}`);
+    logger.warn('NOT: Veriler yeniden başlatmada KAYBOLUR. Atlas bağlantısını kontrol edin.');
     global.__mongoMemoryServer = mongod;
-
     process.on('exit', () => mongod.stop());
     return uri;
   }
 
-  throw new Error('MongoDB connection failed. Set MONGODB_URI in .env');
+  throw new Error('MongoDB bağlantısı kurulamadı. .env dosyasındaki MONGODB_URI adresini kontrol edin.');
 }
 
 async function start() {
@@ -72,6 +68,7 @@ async function start() {
 
   socketHandler(io);
   notification.init(io);
+  startSimulator(5000);
 
   // Offline device check — every 60s
   setInterval(async () => {

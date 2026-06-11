@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
   try {
     const filter = req.user.role === ROLES.ADMIN ? {} : { owner: req.user._id };
     const devices = await Device.find(filter)
-      .populate('owner', 'username email')
+      .populate('owner', 'username email role')
       .sort({ lastSeen: -1 });
     return res.json({ success: true, data: devices });
   } catch (err) {
@@ -93,6 +93,21 @@ router.put(
     }
   }
 );
+
+// Mobil çıkış: cihazı hemen offline yap
+router.patch('/:deviceId/deactivate', async (req, res) => {
+  try {
+    const device = await Device.findOneAndUpdate(
+      { deviceId: req.params.deviceId, owner: req.user._id },
+      { status: 'inactive' },
+      { new: true }
+    );
+    if (!device) return res.status(404).json({ success: false, error: 'Cihaz bulunamadı' });
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Cihaz devre dışı bırakılamadı' });
+  }
+});
 
 router.delete('/:id', authorize(ROLES.ADMIN), async (req, res) => {
   try {

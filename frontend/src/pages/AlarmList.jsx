@@ -4,13 +4,14 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recha
 import AlarmCard from '../components/AlarmCard';
 
 const SEVERITY_OPTIONS = ['', 'low', 'medium', 'high', 'critical'];
+const SEVERITY_TR = { low: 'Düşük', medium: 'Orta', high: 'Yüksek', critical: 'Kritik' };
 const TYPE_OPTIONS = ['', 'NOISE_ANOMALY', 'UNUSUAL_MOVEMENT', 'CROWD_DENSITY', 'RESTRICTED_ZONE', 'DEVICE_OFFLINE'];
 const TYPE_LABELS = {
-  NOISE_ANOMALY: 'Noise Anomaly',
-  UNUSUAL_MOVEMENT: 'Unusual Movement',
-  CROWD_DENSITY: 'Crowd Density',
-  RESTRICTED_ZONE: 'Restricted Zone',
-  DEVICE_OFFLINE: 'Device Offline'
+  NOISE_ANOMALY:    'Gürültü Anomalisi',
+  UNUSUAL_MOVEMENT: 'Olağandışı Hareket',
+  CROWD_DENSITY:    'Kalabalık Yoğunluğu',
+  RESTRICTED_ZONE:  'Yasak Bölge',
+  DEVICE_OFFLINE:   'Cihaz Çevrimdışı'
 };
 
 const PIE_COLORS = ['#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#10b981'];
@@ -50,7 +51,7 @@ export default function AlarmList() {
       await alarmsAPI.resolve(id);
       setAlarms((prev) => prev.map((a) => a._id === id ? { ...a, resolved: true } : a));
     } catch (err) {
-      alert(err.response?.data?.error || 'Failed to resolve');
+      alert(err.response?.data?.error || 'Onaylama başarısız');
     }
   }
 
@@ -62,16 +63,15 @@ export default function AlarmList() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-white">Alarm Management</h1>
+      <h1 className="text-xl font-bold text-white">🔔 Alarm Yönetimi</h1>
 
-      {/* Stats row */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total Alarms', value: stats.total, color: 'text-blue-400' },
-            { label: 'Today', value: stats.todayCount, color: 'text-yellow-400' },
-            { label: 'Unresolved', value: stats.unresolvedCount, color: 'text-red-400' },
-            { label: 'Resolved', value: (stats.total || 0) - (stats.unresolvedCount || 0), color: 'text-green-400' }
+            { label: 'Toplam Alarm', value: stats.total, color: 'text-blue-400' },
+            { label: 'Bugün', value: stats.todayCount, color: 'text-yellow-400' },
+            { label: 'Aktif', value: stats.unresolvedCount, color: 'text-red-400' },
+            { label: 'Çözüldü', value: (stats.total || 0) - (stats.unresolvedCount || 0), color: 'text-green-400' }
           ].map(({ label, value, color }) => (
             <div key={label} className="card text-center">
               <p className={`text-2xl font-bold ${color}`}>{value ?? '—'}</p>
@@ -82,18 +82,17 @@ export default function AlarmList() {
       )}
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Filters + Alarm list */}
         <div className="xl:col-span-2 space-y-4">
-          {/* Filters */}
+          {/* Filtreler */}
           <div className="card flex flex-wrap gap-3">
             <select
               className="input w-auto text-sm"
               value={filters.severity}
               onChange={(e) => setFilters({ ...filters, severity: e.target.value })}
             >
-              <option value="">All Severities</option>
+              <option value="">Tüm Seviyeler</option>
               {SEVERITY_OPTIONS.filter(Boolean).map((s) => (
-                <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                <option key={s} value={s}>{SEVERITY_TR[s]}</option>
               ))}
             </select>
 
@@ -102,7 +101,7 @@ export default function AlarmList() {
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
             >
-              <option value="">All Types</option>
+              <option value="">Tüm Tipler</option>
               {TYPE_OPTIONS.filter(Boolean).map((t) => (
                 <option key={t} value={t}>{TYPE_LABELS[t]}</option>
               ))}
@@ -113,20 +112,20 @@ export default function AlarmList() {
               value={filters.resolved}
               onChange={(e) => setFilters({ ...filters, resolved: e.target.value })}
             >
-              <option value="">All Status</option>
-              <option value="false">Unresolved</option>
-              <option value="true">Resolved</option>
+              <option value="">Tüm Durum</option>
+              <option value="false">Aktif</option>
+              <option value="true">Çözüldü</option>
             </select>
 
-            <button onClick={loadData} className="btn-ghost text-sm">Refresh</button>
+            <button onClick={loadData} className="btn-ghost text-sm">🔄 Yenile</button>
           </div>
 
           {loading ? (
-            <div className="card text-center text-slate-400 py-8 animate-pulse">Loading alarms...</div>
+            <div className="card text-center text-slate-400 py-8 animate-pulse">Yükleniyor...</div>
           ) : alarms.length === 0 ? (
             <div className="card text-center text-slate-500 py-12">
               <p className="text-3xl mb-2">✅</p>
-              No alarms match current filters
+              Filtrelerle eşleşen alarm yok
             </div>
           ) : (
             <div className="space-y-2 max-h-[600px] overflow-y-auto">
@@ -141,11 +140,11 @@ export default function AlarmList() {
           )}
         </div>
 
-        {/* Pie chart */}
+        {/* Pasta grafik */}
         <div className="card">
-          <h3 className="font-semibold text-slate-200 mb-4">Alarms by Type</h3>
+          <h3 className="font-semibold text-slate-200 mb-4">Türe Göre Alarmlar</h3>
           {pieData.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-8">No data</p>
+            <p className="text-slate-500 text-sm text-center py-8">Veri yok</p>
           ) : (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
@@ -173,13 +172,12 @@ export default function AlarmList() {
             </ResponsiveContainer>
           )}
 
-          {/* Severity breakdown */}
           {stats?.bySeverity && (
             <div className="mt-4 pt-4 border-t border-slate-700 space-y-2">
-              <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-2">By Severity</p>
+              <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-2">Önem Düzeyine Göre</p>
               {stats.bySeverity.map((item) => (
                 <div key={item._id} className="flex items-center justify-between">
-                  <span className={`badge-${item._id}`}>{item._id}</span>
+                  <span className={`badge-${item._id}`}>{SEVERITY_TR[item._id] || item._id}</span>
                   <span className="text-sm font-medium text-slate-300">{item.count}</span>
                 </div>
               ))}

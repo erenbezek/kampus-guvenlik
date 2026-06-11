@@ -1,6 +1,7 @@
 const Alarm = require('../models/Alarm');
 const Device = require('../models/Device');
 const SensorData = require('../models/SensorData');
+const Zone = require('../models/Zone');
 const {
   ALARM_TYPES,
   ALARM_SEVERITY,
@@ -8,6 +9,27 @@ const {
   RESTRICTED_ZONES
 } = require('../constants');
 const logger = require('../utils/logger');
+
+// Zone cache — 60 saniyede bir tazele
+let _zonesCache = null;
+let _zonesCacheAt = 0;
+
+async function getActiveZones() {
+  if (_zonesCache && Date.now() - _zonesCacheAt < 60_000) return _zonesCache;
+  try {
+    const dbZones = await Zone.find();
+    _zonesCache = [...RESTRICTED_ZONES, ...dbZones];
+  } catch {
+    _zonesCache = RESTRICTED_ZONES;
+  }
+  _zonesCacheAt = Date.now();
+  return _zonesCache;
+}
+
+// Dışarıdan çağrılabilir — admin yeni zone ekleyince cache'i sıfırla
+function invalidateZoneCache() {
+  _zonesCache = null;
+}
 
 // Per-device in-memory state for rolling analysis
 const deviceState = new Map();
@@ -63,7 +85,7 @@ function calculateZScore(values) {
 }
 
 // Algorithm 6: Composite risk score 0-100
-function calculateRiskScore(sensors) {
+function calculateRiskScore(sensors, zones = RESTRICTED_ZONES) {
   const { accelerometer, audioLevel, gps, networkStrength } = sensors;
   let score = 0;
 
@@ -82,10 +104,10 @@ function calculateRiskScore(sensors) {
     score += Math.min(mag / 30, 1) * 30;
   }
 
-  // Restricted zone: 25% weight
+  // Restricted zone: 25% weight (sadece safe olmayan zone'lar)
   if (gps && gps.lat != null && gps.lng != null) {
-    const inZone = RESTRICTED_ZONES.some((zone) =>
-      pointInPolygon(gps.lat, gps.lng, zone.polygon)
+    const inZone = zones.some((zone) =>
+      zone.type !== 'safe' && pointInPolygon(gps.lat, gps.lng, zone.polygon)
     );
     if (inZone) score += 25;
   }
@@ -247,21 +269,33 @@ async function analyzeCrowdDensity(deviceId, gps) {
   return [];
 }
 
-// ----- Algorithm 4: Restricted zone check -----
-async function analyzeRestrictedZone(deviceId, gps) {
+// ----- Algorithm 4: Restricted zone check (DB + sabit zone'lar) -----
+async function analyzeRestrictedZone(deviceId, gps, zones) {
   if (!gps || gps.lat == null || gps.lng == null) return [];
   const results = [];
 
-  for (const zone of RESTRICTED_ZONES) {
+  // 'safe' türündeki zone'lar alarm tetiklemez
+  const alarmZones = zones.filter(z => z.type !== 'safe');
+
+  const SEVERITY_MAP = {
+    critical: ALARM_SEVERITY.CRITICAL,
+    restricted: ALARM_SEVERITY.CRITICAL,
+    lab: ALARM_SEVERITY.HIGH,
+    emergency: ALARM_SEVERITY.HIGH
+  };
+
+  for (const zone of alarmZones) {
     if (pointInPolygon(gps.lat, gps.lng, zone.polygon)) {
       const key = `${ALARM_TYPES.RESTRICTED_ZONE}_${zone.name}`;
       if (await canCreateAlarm(deviceId, key, THRESHOLDS.RESTRICTED_COOLDOWN_MS)) {
+        const severity = SEVERITY_MAP[zone.type] || ALARM_SEVERITY.HIGH;
+        const typeLabel = zone.type === 'critical' ? 'kritik alan' : zone.type === 'lab' ? 'laboratuvar' : zone.type === 'emergency' ? 'acil toplanma noktası' : 'yasak bölge';
         results.push(
           await persistAlarm(
             deviceId,
             ALARM_TYPES.RESTRICTED_ZONE,
-            ALARM_SEVERITY.CRITICAL,
-            `Device entered restricted zone: "${zone.name}" at GPS (${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)})`
+            severity,
+            `Cihaz "${zone.name}" ${typeLabel}na girdi — GPS: (${gps.lat.toFixed(5)}, ${gps.lng.toFixed(5)})`
           )
         );
       }
@@ -302,11 +336,13 @@ async function checkOfflineDevices() {
 // ----- Main entry point: analyze incoming sensor data -----
 async function analyzeData(deviceId, sensors) {
   try {
+    const zones = await getActiveZones();
+
     const [noiseAlarms, movementAlarms, crowdAlarms, restrictedAlarms] = await Promise.all([
       analyzeNoise(deviceId, sensors.audioLevel),
       analyzeMovement(deviceId, sensors.accelerometer),
       analyzeCrowdDensity(deviceId, sensors.gps),
-      analyzeRestrictedZone(deviceId, sensors.gps)
+      analyzeRestrictedZone(deviceId, sensors.gps, zones)
     ]);
 
     const alarms = [
@@ -316,7 +352,7 @@ async function analyzeData(deviceId, sensors) {
       ...restrictedAlarms
     ];
 
-    const riskScore = calculateRiskScore(sensors);
+    const riskScore = calculateRiskScore(sensors, zones);
 
     return { alarms, riskScore };
   } catch (err) {
@@ -328,5 +364,6 @@ async function analyzeData(deviceId, sensors) {
 module.exports = {
   analyzeData,
   checkOfflineDevices,
-  calculateRiskScore
+  calculateRiskScore,
+  invalidateZoneCache
 };

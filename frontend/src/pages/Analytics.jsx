@@ -87,7 +87,7 @@ export default function Analytics() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-xl font-bold text-white">Analytics</h1>
+        <h1 className="text-xl font-bold text-white">📊 Analitik</h1>
         <div className="flex items-center gap-3">
           <select
             className="input w-auto text-sm"
@@ -99,7 +99,7 @@ export default function Analytics() {
             ))}
           </select>
           <button onClick={downloadCSV} className="btn-ghost text-sm" disabled={!timeSeriesData.length}>
-            ⬇ Export CSV
+            ⬇ CSV İndir
           </button>
         </div>
       </div>
@@ -107,15 +107,15 @@ export default function Analytics() {
       {/* Time Series Chart */}
       <div className="card">
         <h3 className="font-semibold text-slate-200 mb-4">
-          Sensor Time Series — {devices.find((d) => d.deviceId === selectedDevice)?.name || selectedDevice}
+          Sensör Zaman Serisi — {devices.find((d) => d.deviceId === selectedDevice)?.name || selectedDevice}
         </h3>
         {loading ? (
           <div className="h-52 flex items-center justify-center text-slate-400 animate-pulse text-sm">
-            Loading data...
+            Yükleniyor...
           </div>
         ) : timeSeriesData.length === 0 ? (
           <div className="h-52 flex items-center justify-center text-slate-500 text-sm">
-            No data for this device
+            Bu cihaz için veri yok
           </div>
         ) : (
           <ResponsiveContainer width="100%" height={260}>
@@ -125,9 +125,9 @@ export default function Analytics() {
               <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} tickLine={false} axisLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
               <Legend wrapperStyle={{ fontSize: 11, color: '#94a3b8' }} />
-              <Line type="monotone" dataKey="audio" name="Audio (dB)" stroke="#f59e0b" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="risk" name="Risk Score" stroke="#ef4444" strokeWidth={2} dot={false} />
-              <Line type="monotone" dataKey="network" name="Network %" stroke="#3b82f6" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
+              <Line type="monotone" dataKey="audio" name="Ses (dB)" stroke="#f59e0b" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="risk" name="Risk Skoru" stroke="#ef4444" strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="network" name="Ağ Gücü %" stroke="#3b82f6" strokeWidth={1.5} dot={false} strokeDasharray="4 2" />
             </LineChart>
           </ResponsiveContainer>
         )}
@@ -137,7 +137,7 @@ export default function Analytics() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Alarm heatmap by hour */}
         <div className="card">
-          <h3 className="font-semibold text-slate-200 mb-4">Alarm Frequency by Hour (last 7 days)</h3>
+          <h3 className="font-semibold text-slate-200 mb-4">Saatlik Alarm Sıklığı (son 7 gün)</h3>
           <div className="grid grid-cols-12 gap-1 mb-2">
             {hourlyData.map((count, h) => (
               <HeatmapCell key={h} count={count} max={maxHourly} />
@@ -159,15 +159,15 @@ export default function Analytics() {
 
         {/* Risk score distribution */}
         <div className="card">
-          <h3 className="font-semibold text-slate-200 mb-4">Risk Score Distribution</h3>
+          <h3 className="font-semibold text-slate-200 mb-4">Risk Skoru Dağılımı</h3>
           {timeSeriesData.length === 0 ? (
-            <p className="text-slate-500 text-sm text-center py-12">Select a device to see distribution</p>
+            <p className="text-slate-500 text-sm text-center py-12">Dağılımı görmek için cihaz seçin</p>
           ) : (() => {
             const buckets = [
-              { label: '0-25 (Safe)', range: [0, 25], color: '#22c55e' },
-              { label: '26-50 (Low)', range: [26, 50], color: '#eab308' },
-              { label: '51-75 (Medium)', range: [51, 75], color: '#f97316' },
-              { label: '76-100 (High)', range: [76, 100], color: '#ef4444' }
+              { label: '0–25 (Güvenli)', range: [0, 25], color: '#22c55e' },
+              { label: '26–50 (Düşük)', range: [26, 50], color: '#eab308' },
+              { label: '51–75 (Orta)', range: [51, 75], color: '#f97316' },
+              { label: '76–100 (Yüksek)', range: [76, 100], color: '#ef4444' }
             ];
             const data = buckets.map((b) => ({
               ...b,
@@ -181,7 +181,7 @@ export default function Analytics() {
                     <div key={b.label}>
                       <div className="flex justify-between text-xs text-slate-400 mb-1">
                         <span>{b.label}</span>
-                        <span>{b.count} readings ({pct}%)</span>
+                        <span>{b.count} okuma ({pct}%)</span>
                       </div>
                       <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
                         <div
@@ -193,7 +193,7 @@ export default function Analytics() {
                   );
                 })}
                 <p className="text-xs text-slate-500 pt-2">
-                  Based on {timeSeriesData.length} readings for selected device
+                  Seçili cihaz için {timeSeriesData.length} okuma baz alındı
                 </p>
               </div>
             );

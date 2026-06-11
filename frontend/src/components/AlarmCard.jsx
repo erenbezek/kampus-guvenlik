@@ -7,22 +7,26 @@ const SEVERITY_CONFIG = {
   critical: { badge: 'badge-critical', icon: '🚨',  border: 'border-red-700' }
 };
 
+const SEVERITY_TR = {
+  low: 'düşük', medium: 'orta', high: 'yüksek', critical: 'kritik'
+};
+
 const TYPE_LABELS = {
-  NOISE_ANOMALY:    'Noise',
-  UNUSUAL_MOVEMENT: 'Movement',
-  CROWD_DENSITY:    'Crowd',
-  RESTRICTED_ZONE:  'Restricted Zone',
-  DEVICE_OFFLINE:   'Offline'
+  NOISE_ANOMALY:    'Gürültü',
+  UNUSUAL_MOVEMENT: 'Hareket',
+  CROWD_DENSITY:    'Kalabalık',
+  RESTRICTED_ZONE:  'Yasak Bölge',
+  DEVICE_OFFLINE:   'Çevrimdışı'
 };
 
 function timeAgo(ts) {
   const diff = Date.now() - new Date(ts).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return 'az önce';
+  if (mins < 60) return `${mins} dk önce`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return `${hrs} sa önce`;
+  return `${Math.floor(hrs / 24)} gün önce`;
 }
 
 export default function AlarmCard({ alarm, onResolve }) {
@@ -35,12 +39,12 @@ export default function AlarmCard({ alarm, onResolve }) {
           <span className="text-base mt-0.5 shrink-0">{cfg.icon}</span>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={cfg.badge}>{alarm.severity}</span>
+              <span className={cfg.badge}>{SEVERITY_TR[alarm.severity] || alarm.severity}</span>
               <span className="text-xs text-slate-400">{TYPE_LABELS[alarm.type] || alarm.type}</span>
             </div>
             <p className="text-sm text-slate-200 mt-1 leading-snug line-clamp-2">{alarm.message}</p>
             <p className="text-xs text-slate-500 mt-1">
-              {alarm.deviceId?.name || 'Unknown device'} · {timeAgo(alarm.timestamp)}
+              {alarm.deviceId?.name || 'Bilinmeyen cihaz'} · {timeAgo(alarm.timestamp)}
             </p>
           </div>
         </div>
@@ -50,13 +54,13 @@ export default function AlarmCard({ alarm, onResolve }) {
             onClick={() => onResolve(alarm._id)}
             className="shrink-0 text-xs px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 transition-colors"
           >
-            Resolve
+            Onayla
           </button>
         )}
 
         {alarm.resolved && (
           <span className="shrink-0 text-xs text-green-500 flex items-center gap-1">
-            ✓ Resolved
+            ✓ Çözüldü
           </span>
         )}
       </div>

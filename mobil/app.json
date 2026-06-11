@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "btukampus-mobil",
+    "slug": "btukampus-mobil",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-audio",
+      "expo-secure-store"
+    ]
+  }
+}

@@ -26,17 +26,17 @@ const ALARM_SEVERITY = {
 
 const THRESHOLDS = {
   NOISE_DB: 85,
-  NOISE_CONSECUTIVE: 10,
-  ACCEL_MAGNITUDE: 20,
-  MOVEMENT_CONSECUTIVE: 3,
+  NOISE_CONSECUTIVE: 3,       // 3 ardışık okuma (~15 saniye)
+  ACCEL_MAGNITUDE: 2.5,       // G-force: normal=1.0, sallama=2-4
+  MOVEMENT_CONSECUTIVE: 1,    // Tek okuma yeterli
   CROWD_RADIUS_M: 50,
-  CROWD_COUNT: 15,
+  CROWD_COUNT: 0,             // Demo: 2 cihaz yeterli (nearbyCount > 0)
   OFFLINE_MINUTES: 10,
   ZSCORE_THRESHOLD: 2.5,
   ROLLING_WINDOW: 30,
-  ALARM_COOLDOWN_MS: 5 * 60 * 1000,
-  CROWD_COOLDOWN_MS: 10 * 60 * 1000,
-  RESTRICTED_COOLDOWN_MS: 15 * 60 * 1000
+  ALARM_COOLDOWN_MS: 60 * 1000,        // 1 dakika cooldown
+  CROWD_COOLDOWN_MS: 2 * 60 * 1000,
+  RESTRICTED_COOLDOWN_MS: 2 * 60 * 1000
 };
 
 const SOCKET_EVENTS = {
@@ -46,39 +46,8 @@ const SOCKET_EVENTS = {
   JOIN_DASHBOARD: 'join:dashboard'
 };
 
-// Bursa Technical University campus area restricted zones
-const RESTRICTED_ZONES = [
-  {
-    name: 'Server Room',
-    color: '#dc2626',
-    polygon: [
-      { lat: 40.21650, lng: 29.08300 },
-      { lat: 40.21665, lng: 29.08320 },
-      { lat: 40.21655, lng: 29.08340 },
-      { lat: 40.21640, lng: 29.08320 }
-    ]
-  },
-  {
-    name: 'Administrative Building',
-    color: '#ea580c',
-    polygon: [
-      { lat: 40.21700, lng: 29.08400 },
-      { lat: 40.21725, lng: 29.08435 },
-      { lat: 40.21715, lng: 29.08465 },
-      { lat: 40.21690, lng: 29.08430 }
-    ]
-  },
-  {
-    name: 'Research Lab',
-    color: '#d97706',
-    polygon: [
-      { lat: 40.21580, lng: 29.08250 },
-      { lat: 40.21602, lng: 29.08282 },
-      { lat: 40.21592, lng: 29.08312 },
-      { lat: 40.21570, lng: 29.08280 }
-    ]
-  }
-];
+// Sabit zone yok — admin panelinden çizilir
+const RESTRICTED_ZONES = [];
 
 module.exports = {
   ROLES,

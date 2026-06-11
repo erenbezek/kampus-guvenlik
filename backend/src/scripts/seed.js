@@ -96,14 +96,14 @@ async function seed() {
 
   // ── Devices ────────────────────────────────────────────────────────────
   const deviceDefs = [
-    { deviceId: 'BTU-001', name: 'Campus Gate North', owner: admin._id },
-    { deviceId: 'BTU-002', name: 'Library Entrance', owner: admin._id },
-    { deviceId: 'BTU-003', name: 'Engineering Building A', owner: op1._id },
-    { deviceId: 'BTU-004', name: 'Engineering Building B', owner: op1._id },
-    { deviceId: 'BTU-005', name: 'Student Cafeteria', owner: op2._id },
-    { deviceId: 'BTU-006', name: 'Sports Complex', owner: op2._id },
-    { deviceId: 'BTU-007', name: 'Parking Lot West', owner: admin._id },
-    { deviceId: 'BTU-008', name: 'Research Center', owner: op1._id }
+    { deviceId: 'BTU-001', name: 'Yapay Kaynak 1', owner: admin._id },
+    { deviceId: 'BTU-002', name: 'Yapay Kaynak 2', owner: admin._id },
+    { deviceId: 'BTU-003', name: 'Yapay Kaynak 3', owner: op1._id },
+    { deviceId: 'BTU-004', name: 'Yapay Kaynak 4', owner: op1._id },
+    { deviceId: 'BTU-005', name: 'Yapay Kaynak 5', owner: op2._id },
+    { deviceId: 'BTU-006', name: 'Yapay Kaynak 6', owner: op2._id },
+    { deviceId: 'BTU-007', name: 'Yapay Kaynak 7', owner: admin._id },
+    { deviceId: 'BTU-008', name: 'Yapay Kaynak 8', owner: op1._id }
   ];
 
   const devices = await Device.insertMany(

@@ -63,6 +63,17 @@ export const alarmsAPI = {
   getStats: () => api.get('/alarms/stats')
 };
 
+// ── Admin ─────────────────────────────────────────────────────────────────
+export const adminAPI = {
+  generateInviteCode: () => api.post('/admin/invite-codes'),
+  listInviteCodes: () => api.get('/admin/invite-codes'),
+  deleteInviteCode: (code) => api.delete(`/admin/invite-codes/${code}`),
+  listZones: () => api.get('/admin/zones'),
+  createZone: (data) => api.post('/admin/zones', data),
+  updateZone: (id, data) => api.put(`/admin/zones/${id}`, data),
+  deleteZone: (id) => api.delete(`/admin/zones/${id}`)
+};
+
 // ── Misc ──────────────────────────────────────────────────────────────────
 export const zonesAPI = {
   getAll: () => api.get('/zones')

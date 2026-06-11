@@ -7,6 +7,7 @@ import MapView from './pages/MapView';
 import DeviceManagement from './pages/DeviceManagement';
 import AlarmList from './pages/AlarmList';
 import Analytics from './pages/Analytics';
+import AdminPanel from './pages/AdminPanel';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('token');
@@ -76,6 +77,16 @@ export default function App() {
             <RequireAuth>
               <Layout>
                 <Analytics />
+              </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth>
+              <Layout>
+                <AdminPanel />
               </Layout>
             </RequireAuth>
           }

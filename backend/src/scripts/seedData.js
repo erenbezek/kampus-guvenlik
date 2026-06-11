@@ -40,10 +40,25 @@ function makeSensors(scenario = 'normal') {
   };
 }
 
+// Eski İngilizce isimleri Yapay Kaynak X ile güncelle
+const DEVICE_RENAMES = {
+  'Campus Gate North':   'Yapay Kaynak 1',
+  'Library Entrance':    'Yapay Kaynak 2',
+  'Engineering Block A': 'Yapay Kaynak 3',
+  'Engineering Block B': 'Yapay Kaynak 4',
+  'Student Cafeteria':   'Yapay Kaynak 5',
+  'Sports Complex':      'Yapay Kaynak 6',
+  'Parking Lot West':    'Yapay Kaynak 7',
+  'Research Center':     'Yapay Kaynak 8'
+};
+
 async function runSeed() {
-  // Skip if data already exists
   const userCount = await User.countDocuments();
   if (userCount > 0) {
+    // Cihaz isimlerini güncelle (eski isimler varsa)
+    for (const [oldName, newName] of Object.entries(DEVICE_RENAMES)) {
+      await Device.updateOne({ name: oldName }, { $set: { name: newName } });
+    }
     logger.info('Seed skipped — data already exists');
     return;
   }

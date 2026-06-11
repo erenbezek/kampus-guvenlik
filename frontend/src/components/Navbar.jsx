@@ -9,6 +9,8 @@ const NAV_ITEMS = [
   { to: '/analytics', label: 'Analytics', icon: '📈' }
 ];
 
+const ADMIN_NAV = { to: '/admin', label: 'Admin', icon: '⚙️' };
+
 export default function Navbar() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -54,6 +56,20 @@ export default function Navbar() {
               <span className="mr-1">{icon}</span>{label}
             </NavLink>
           ))}
+          {user.role === 'admin' && (
+            <NavLink
+              to={ADMIN_NAV.to}
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? 'bg-purple-600 text-white'
+                    : 'text-purple-300 hover:bg-purple-900 hover:text-white'
+                }`
+              }
+            >
+              <span className="mr-1">{ADMIN_NAV.icon}</span>{ADMIN_NAV.label}
+            </NavLink>
+          )}
         </div>
 
         {/* User + logout */}
@@ -99,6 +115,19 @@ export default function Navbar() {
               <span className="mr-2">{icon}</span>{label}
             </NavLink>
           ))}
+          {user.role === 'admin' && (
+            <NavLink
+              to={ADMIN_NAV.to}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive ? 'bg-purple-600 text-white' : 'text-purple-300 hover:bg-purple-900'
+                }`
+              }
+            >
+              <span className="mr-2">{ADMIN_NAV.icon}</span>{ADMIN_NAV.label}
+            </NavLink>
+          )}
         </div>
       )}
     </nav>

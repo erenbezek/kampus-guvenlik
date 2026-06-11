@@ -12,7 +12,7 @@ export default function Login() {
 
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [regForm, setRegForm] = useState({
-    username: '', email: '', password: '', confirmPassword: '', role: 'viewer'
+    username: '', email: '', password: '', confirmPassword: '', role: 'viewer', inviteCode: ''
   });
 
   function switchMode(m) {
@@ -59,12 +59,16 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const res = await authAPI.register({
+      const payload = {
         username: regForm.username,
         email: regForm.email,
         password: regForm.password,
         role: regForm.role
-      });
+      };
+      if (regForm.role === 'operator' && regForm.inviteCode.trim()) {
+        payload.invite_code = regForm.inviteCode.trim().toUpperCase();
+      }
+      const res = await authAPI.register(payload);
       const { token, user } = res.data.data;
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
@@ -216,13 +220,28 @@ export default function Login() {
                 <select
                   className="input"
                   value={regForm.role}
-                  onChange={(e) => setRegForm({ ...regForm, role: e.target.value })}
+                  onChange={(e) => setRegForm({ ...regForm, role: e.target.value, inviteCode: '' })}
                 >
-                  <option value="viewer">Viewer — Sadece görüntüleme</option>
-                  <option value="operator">Operator — Cihaz yönetimi + alarm çözme</option>
-                  <option value="admin">Admin — Tam yetki</option>
+                  <option value="viewer">👁️ İzleyici — Sadece görüntüleme (ücretsiz)</option>
+                  <option value="operator">🔧 Operatör — Alarm çözme (davet kodu gerekli)</option>
                 </select>
               </div>
+              {regForm.role === 'operator' && (
+                <div>
+                  <label className="block text-sm text-slate-400 mb-1.5">
+                    Davet Kodu <span className="text-blue-400">(Admin'den alın)</span>
+                  </label>
+                  <input
+                    type="text"
+                    className="input font-mono tracking-widest uppercase"
+                    placeholder="Örn: A3F7B2C1"
+                    value={regForm.inviteCode}
+                    onChange={(e) => setRegForm({ ...regForm, inviteCode: e.target.value.toUpperCase() })}
+                    maxLength={8}
+                    required
+                  />
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-slate-400 mb-1.5">Şifre</label>
                 <input
