@@ -6,8 +6,8 @@ const { analyzeData } = require('./anomalyDetector');
 const notification = require('./notificationService');
 const logger = require('../utils/logger');
 
-const BTU_LAT = 40.187334;
-const BTU_LNG = 29.104170;
+const BTU_LAT = 40.18761378070147;
+const BTU_LNG = 29.12915854897244;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 
