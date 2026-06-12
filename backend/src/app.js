@@ -33,6 +33,8 @@ app.use(cors({
     if (!origin) return callback(null, true);
     // Dev modda Expo / localhost her porttan çalışabilir
     if (IS_DEV) return callback(null, true);
+    // CLIENT_URL=* → tüm origin'lere izin ver
+    if (ALLOWED_ORIGINS.includes('*')) return callback(null, true);
     // Production: sadece allowlist
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: ${origin} engellendi`));

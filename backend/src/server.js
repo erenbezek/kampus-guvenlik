@@ -68,7 +68,7 @@ async function start() {
 
   const io = new Server(server, {
     cors: {
-      origin: IS_DEV ? '*' : ALLOWED_ORIGINS,
+      origin: (IS_DEV || ALLOWED_ORIGINS.includes('*')) ? '*' : ALLOWED_ORIGINS,
       methods: ['GET', 'POST'],
       credentials: true
     }

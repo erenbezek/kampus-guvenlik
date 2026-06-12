@@ -18,3 +18,18 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+
+  - type: web
+    name: kampus-guvenlik-frontend
+    runtime: static
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://kampus-guvenlik-backend.onrender.com

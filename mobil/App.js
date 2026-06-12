@@ -10,9 +10,9 @@ import * as Network from 'expo-network';
 // Lokal test için: LOCAL_URL'i kendi bilgisayarının IP'siyle güncelle ve aşağıda onu seç
 //   Bulmak için: Windows → "ipconfig" → Kablosuz Ağ Bağdaştırıcısı → IPv4 Adresi
 //   Örnek: http://192.168.1.42:3001
-const PROD_URL = 'https://RENDER-URL-BURAYA.onrender.com';
+const PROD_URL = 'https://kampus-guvenlik-backend.onrender.com';
 const LOCAL_URL = 'http://172.20.10.4:3001';
-const API_URL = LOCAL_URL;
+const API_URL = PROD_URL;
 
 const tokenRef = { current: null };
 const deviceIdRef = { current: null };
