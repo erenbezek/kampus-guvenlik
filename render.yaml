@@ -18,6 +18,8 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      - key: ENABLE_FAKE_SENSORS
+        value: "true"
 
   - type: web
     name: kampus-guvenlik-frontend
