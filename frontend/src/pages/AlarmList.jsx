@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { alarmsAPI } from '../services/api';
+import api from '../services/api';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import AlarmCard from '../components/AlarmCard';
 
@@ -43,6 +44,24 @@ export default function AlarmList() {
       setStats(statsRes.data.data);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function downloadCSV() {
+    try {
+      const params = new URLSearchParams();
+      if (filters.severity) params.set('severity', filters.severity);
+      if (filters.type) params.set('type', filters.type);
+      if (filters.resolved !== '') params.set('resolved', filters.resolved);
+      const res = await api.get(`/alarms/export?${params}`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `alarmlar-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('CSV indirilemedi');
     }
   }
 
@@ -118,6 +137,7 @@ export default function AlarmList() {
             </select>
 
             <button onClick={loadData} className="btn-ghost text-sm">🔄 Yenile</button>
+            <button onClick={downloadCSV} className="btn-ghost text-sm">⬇ CSV İndir</button>
           </div>
 
           {loading ? (

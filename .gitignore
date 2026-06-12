@@ -9,3 +9,5 @@ dist/
 build/
 .DS_Store
 *.log
+mobil/.expo/
+backend/coverage/

@@ -5,6 +5,11 @@ import { Accelerometer } from 'expo-sensors';
 import * as Battery from 'expo-battery';
 import * as Network from 'expo-network';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DEMO ÖNCESİ: Aşağıdaki IP'yi kendi bilgisayarınızın yerel ağ IP'siyle değiştirin!
+// Bulmak için: Windows → "ipconfig" → Kablosuz Ağ Bağdaştırıcısı → IPv4 Adresi
+// Örnek: http://192.168.1.42:3001
+// ─────────────────────────────────────────────────────────────────────────────
 const API_URL = 'http://172.20.10.5:3001';
 
 const tokenRef = { current: null };

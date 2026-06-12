@@ -49,7 +49,7 @@ router.post(
         ...(sensors.gps?.lat != null && {
           location: { lat: sensors.gps.lat, lng: sensors.gps.lng }
         }),
-        ...(sensors.networkStrength != null && { batteryLevel: req.body.batteryLevel })
+        ...(req.body.batteryLevel != null && { batteryLevel: req.body.batteryLevel })
       });
 
       // Broadcast to dashboard via socket

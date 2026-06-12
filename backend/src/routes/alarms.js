@@ -47,6 +47,50 @@ router.get(
   }
 );
 
+// GET /api/alarms/export — CSV indir (aynı filtreler desteklenir)
+router.get('/export', async (req, res) => {
+  try {
+    const { severity, resolved, from, to, type } = req.query;
+    const filter = {};
+    if (severity) filter.severity = severity;
+    if (type) filter.type = type;
+    if (resolved !== undefined) filter.resolved = resolved === 'true';
+    if (from || to) {
+      filter.timestamp = {};
+      if (from) filter.timestamp.$gte = new Date(from);
+      if (to) filter.timestamp.$lte = new Date(to);
+    }
+
+    const alarms = await Alarm.find(filter)
+      .sort({ timestamp: -1 })
+      .limit(5000)
+      .populate('deviceId', 'name deviceId')
+      .populate('resolvedBy', 'username');
+
+    const escape = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const header = ['ID', 'Tip', 'Önem', 'Mesaj', 'Cihaz', 'Zaman', 'Çözüldü', 'Çözen', 'Çözüm Zamanı'].join(',');
+    const rows = alarms.map((a) => [
+      escape(a._id),
+      escape(a.type),
+      escape(a.severity),
+      escape(a.message),
+      escape(a.deviceId?.name || ''),
+      escape(a.timestamp?.toISOString() || ''),
+      escape(a.resolved ? 'Evet' : 'Hayır'),
+      escape(a.resolvedBy?.username || ''),
+      escape(a.resolvedAt?.toISOString() || '')
+    ].join(','));
+
+    const csv = [header, ...rows].join('\n');
+    const filename = `alarmlar-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send('﻿' + csv); // BOM → Excel'de Türkçe karakter desteği
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'CSV oluşturulamadı' });
+  }
+});
+
 // POST /api/alarms/:id/resolve
 router.post('/:id/resolve', authorize(ROLES.ADMIN, ROLES.OPERATOR), async (req, res) => {
   try {
