@@ -38,7 +38,7 @@ function pointIcon(i) {
 
 function ZoneDrawMap({ points, onAddPoint, existingZones }) {
   return (
-    <MapContainer center={[40.2167, 29.0833]} zoom={16} style={{ height: '320px', width: '100%' }} className="z-0 rounded-lg">
+    <MapContainer center={[40.2378, 29.0076]} zoom={16} style={{ height: '320px', width: '100%' }} className="z-0 rounded-lg">
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
       <ClickHandler onAdd={onAddPoint} />
 

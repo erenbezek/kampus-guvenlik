@@ -9,8 +9,8 @@ const { ALARM_TYPES, ALARM_SEVERITY } = require('../constants');
 const logger = require('../utils/logger');
 
 const SALT_ROUNDS = 12;
-const CAMPUS_LAT = 40.2167;
-const CAMPUS_LNG = 29.0833;
+const CAMPUS_LAT = 40.2378;
+const CAMPUS_LNG = 29.0076;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 function randInt(min, max) { return Math.floor(rand(min, max + 1)); }

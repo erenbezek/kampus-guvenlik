@@ -5,12 +5,14 @@ import { Accelerometer } from 'expo-sensors';
 import * as Battery from 'expo-battery';
 import * as Network from 'expo-network';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DEMO ÖNCESİ: Aşağıdaki IP'yi kendi bilgisayarınızın yerel ağ IP'siyle değiştirin!
-// Bulmak için: Windows → "ipconfig" → Kablosuz Ağ Bağdaştırıcısı → IPv4 Adresi
-// Örnek: http://192.168.1.42:3001
-// ─────────────────────────────────────────────────────────────────────────────
-const API_URL = 'http://172.20.10.5:3001';
+// ── API ADRESİ ─────────────────────────────────────────
+// Render (canlı demo) için: PROD_URL'i kullan
+// Lokal test için: LOCAL_URL'i kendi bilgisayarının IP'siyle güncelle ve aşağıda onu seç
+//   Bulmak için: Windows → "ipconfig" → Kablosuz Ağ Bağdaştırıcısı → IPv4 Adresi
+//   Örnek: http://192.168.1.42:3001
+const PROD_URL = 'https://RENDER-URL-BURAYA.onrender.com';
+const LOCAL_URL = 'http://172.20.10.4:3001';
+const API_URL = PROD_URL;
 
 const tokenRef = { current: null };
 const deviceIdRef = { current: null };
@@ -290,20 +292,25 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [deviceName, setDeviceName] = useState('');
 
-  const setupDevice = async (jwt) => {
+  const setupDevice = async (jwt, username) => {
     try {
       const listRes = await fetch(`${API_URL}/api/devices`, {
         headers: { 'Authorization': `Bearer ${jwt}` },
       });
       const listData = await listRes.json();
-      if (listData.success && listData.data?.length > 0) {
-        setDeviceName(listData.data[0].name);
-        return listData.data[0].deviceId;
+      // Yapay sensör kaynakları (BTU- ile başlayan "Yapay Kaynak" cihazları) hariç,
+      // bu kullanıcının kendi mobil cihazını bul
+      const ownDevice = listData.success
+        ? listData.data?.find((d) => d.deviceId.startsWith('mobile-'))
+        : null;
+      if (ownDevice) {
+        setDeviceName(ownDevice.name);
+        return ownDevice.deviceId;
       }
       const response = await fetch(`${API_URL}/api/devices`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
-        body: JSON.stringify({ name: 'Mobil Cihaz', deviceId: `mobile-${Date.now()}` }),
+        body: JSON.stringify({ name: `Mobil Cihaz - ${username}`, deviceId: `mobile-${Date.now()}` }),
       });
       const data = await response.json();
       if (data.success) {
@@ -315,7 +322,7 @@ export default function App() {
   };
 
   const loginWithToken = async (jwt, user) => {
-    const dId = await setupDevice(jwt);
+    const dId = await setupDevice(jwt, user?.username || 'Kullanıcı');
     if (!dId) {
       Alert.alert('Hata', 'Cihaz kaydedilemedi');
       return false;

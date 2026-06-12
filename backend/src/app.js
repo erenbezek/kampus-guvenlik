@@ -18,7 +18,14 @@ const swaggerSpec = require('./config/swagger');
 const app = express();
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
-const ALLOWED_ORIGINS = [process.env.CLIENT_URL || 'http://localhost:5173'];
+const ALLOWED_ORIGINS = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+// Render reverse proxy arkasında çalışıyor — express-rate-limit'in gerçek
+// istemci IP'sini görmesi için gerekli
+app.set('trust proxy', 1);
 
 app.use(cors({
   origin: (origin, callback) => {

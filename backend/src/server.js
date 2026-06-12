@@ -20,7 +20,13 @@ const logger = require('./utils/logger');
 const runSeed = require('./scripts/seedData');
 
 const PORT = process.env.PORT || 3001;
+const HOST = '0.0.0.0';
 const IS_DEV = process.env.NODE_ENV !== 'production';
+
+const ALLOWED_ORIGINS = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 async function getMongoUri() {
   const mongoose = require('mongoose');
@@ -62,7 +68,7 @@ async function start() {
 
   const io = new Server(server, {
     cors: {
-      origin: IS_DEV ? '*' : (process.env.CLIENT_URL || 'http://localhost:5173'),
+      origin: IS_DEV ? '*' : ALLOWED_ORIGINS,
       methods: ['GET', 'POST'],
       credentials: true
     }
@@ -85,10 +91,20 @@ async function start() {
     }
   }, 60 * 1000);
 
-  server.listen(PORT, () => {
-    logger.info(`Backend  → http://localhost:${PORT}`);
-    logger.info(`API Docs → http://localhost:${PORT}/api/docs`);
-    logger.info(`Health   → http://localhost:${PORT}/api/health`);
+  // Render free tier'da uygulama 15 dk hareketsizlikte uyutulur.
+  // SELF_PING_URL tanımlıysa periyodik olarak /api/health'e istek atarak ayakta tutar.
+  if (process.env.SELF_PING_URL) {
+    setInterval(() => {
+      fetch(process.env.SELF_PING_URL)
+        .then(() => logger.info('Self-ping başarılı'))
+        .catch((err) => logger.warn(`Self-ping başarısız: ${err.message}`));
+    }, 10 * 60 * 1000);
+  }
+
+  server.listen(PORT, HOST, () => {
+    logger.info(`Backend  → http://${HOST}:${PORT}`);
+    logger.info(`API Docs → http://${HOST}:${PORT}/api/docs`);
+    logger.info(`Health   → http://${HOST}:${PORT}/api/health`);
   });
 
   process.on('SIGTERM', () => {
