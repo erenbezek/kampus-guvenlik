@@ -41,7 +41,7 @@ export default function MapView() {
   const [loading, setLoading] = useState(true);
 
   // BTU Mimar Sinan Yerleşkesi merkezi
-  const CENTER = [40.2378, 29.0076];
+  const CENTER = [40.187334, 29.104170];
 
   useEffect(() => {
     connectSocket();

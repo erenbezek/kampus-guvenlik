@@ -6,14 +6,16 @@ const { analyzeData } = require('./anomalyDetector');
 const notification = require('./notificationService');
 const logger = require('../utils/logger');
 
-const BTU_LAT = 40.2378;
-const BTU_LNG = 29.0076;
+const BTU_LAT = 40.187334;
+const BTU_LNG = 29.104170;
 
 function rand(min, max) { return min + Math.random() * (max - min); }
 
-function makeSensors(device) {
-  const baseLat = device.location?.lat || BTU_LAT;
-  const baseLng = device.location?.lng || BTU_LNG;
+function makeSensors() {
+  // Sabit kampüs merkezi etrafında jitter — random walk yapmaz, böylece
+  // birden fazla simülatör örneği aynı anda çalışsa da konum kampüsten uzaklaşmaz
+  const baseLat = BTU_LAT;
+  const baseLng = BTU_LNG;
   const audioLevel = parseFloat(rand(38, 78).toFixed(1));
   const mag = rand(0.8, 1.6);
   const angle = Math.random() * 2 * Math.PI;
@@ -38,7 +40,7 @@ async function tick() {
   try {
     const devices = await Device.find({ deviceId: /^BTU-/ });
     for (const device of devices) {
-      const sensors = makeSensors(device);
+      const sensors = makeSensors();
       const { alarms, riskScore } = await analyzeData(device._id, sensors);
 
       const sensorDoc = new SensorData({
