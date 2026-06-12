@@ -12,7 +12,7 @@ import * as Network from 'expo-network';
 //   Örnek: http://192.168.1.42:3001
 const PROD_URL = 'https://RENDER-URL-BURAYA.onrender.com';
 const LOCAL_URL = 'http://172.20.10.4:3001';
-const API_URL = PROD_URL;
+const API_URL = LOCAL_URL;
 
 const tokenRef = { current: null };
 const deviceIdRef = { current: null };
