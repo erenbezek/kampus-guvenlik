@@ -1,239 +1,245 @@
-# Campus Safety & Environmental Monitoring Platform
+# Kampüs Güvenlik ve Çevresel İzleme Platformu
 
-**Bursa Technical University — Computer Engineering Department**  
-**Web Programming with Node.js — Semester Project**  
-**Scenario 3: Campus Safety & Environmental Observation**
-
----
-
-## Project Description
-
-Smartphones act as IoT nodes collecting location, motion, audio level, and environmental data to detect unusual situations across campus. The system detects crowd density, noise anomalies, proximity to restricted zones, and suspicious movement in real-time.
-
-### Key Features
-- **Real-time monitoring** via Socket.io — dashboard updates without page refresh
-- **7 anomaly detection algorithms** (noise, movement, crowd, restricted zones, z-score, offline detection, risk scoring)
-- **Interactive campus map** with color-coded device markers and restricted zone overlays
-- **Role-based access control** (admin / operator / viewer)
-- **Mobile simulator** to generate realistic sensor data for demo purposes
-- **Analytics dashboard** with time series charts and alarm heatmaps
+**Bursa Teknik Üniversitesi — Bilgisayar Mühendisliği**
+**Node.js ile Web Programlama — Dönem Projesi**
+**Senaryo 3: Kampüs Güvenliği ve Çevresel Gözlem**
 
 ---
 
-## Architecture
+## Canlı Demo
+
+| Servis | Adres |
+|--------|-------|
+| Web Arayüzü | https://kampus-guvenlik-frontend.onrender.com |
+| Backend API | https://kampus-guvenlik-backend.onrender.com |
+| API Dokümantasyonu (Swagger) | https://kampus-guvenlik-backend.onrender.com/api/docs |
+| Sağlık kontrolü | https://kampus-guvenlik-backend.onrender.com/api/health |
+
+> Backend Render'ın ücretsiz planında çalıştığı için 15 dakika istek gelmezse uykuya geçer; ilk istek 50 saniyeye kadar gecikebilir.
+
+### Demo Hesapları
+
+| Rol | Email | Şifre |
+|-----|-------|-------|
+| Admin | admin@btu.edu.tr | admin123 |
+| Operatör | operator1@btu.edu.tr | operator123 |
+| İzleyici | viewer@btu.edu.tr | viewer123 |
+
+Web arayüzünden "Kayıt Ol" ile yeni hesap da oluşturulabilir.
+
+---
+
+## Proje Açıklaması
+
+Akıllı telefonlar, kampüs genelinde konum, hareket, ses seviyesi ve çevresel verileri toplayan IoT uç noktaları gibi davranır. Sistem; kalabalık yoğunluğu, gürültü anomalileri, yasaklı bölgelere yaklaşma ve şüpheli hareketleri gerçek zamanlı olarak tespit eder.
+
+### Temel Özellikler
+- **Gerçek zamanlı izleme** — Socket.io ile sayfa yenilemeden canlı dashboard güncellemesi
+- **7 anomali tespit algoritması** (gürültü, hareket, kalabalık, yasaklı bölge, z-skoru, çevrimdışı tespiti, risk skoru)
+- **Etkileşimli kampüs haritası** — renk kodlu cihaz işaretçileri ve yasaklı bölge katmanları
+- **Rol bazlı yetkilendirme** (admin / operatör / izleyici)
+- **Mobil simülatör** — demo amaçlı gerçekçi sensör verisi üretir
+- **Analitik panel** — zaman serisi grafikleri ve alarm yoğunluk haritaları
+- **Mobil uygulama** (Expo / React Native) — gerçek cihaz sensörlerinden veri toplar
+
+---
+
+## Mimari
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT BROWSER                           │
-│  React 18 + Vite + Tailwind CSS + Recharts + Leaflet.js        │
-│  Pages: Dashboard | Map | Devices | Alarms | Analytics         │
+│                          TARAYICI                                │
+│  React 18 + Vite + Tailwind CSS + Recharts + Leaflet.js          │
+│  Sayfalar: Dashboard | Harita | Cihazlar | Alarmlar | Analitik    │
 └──────────────────────────┬──────────────────────────────────────┘
-                           │ HTTP REST + Socket.io (ws)
+                            │ HTTP REST + Socket.io (ws)
 ┌──────────────────────────▼──────────────────────────────────────┐
-│                     BACKEND (Node.js)                           │
-│  Express.js REST API          Socket.io Server                  │
-│  ├─ /api/auth                 ├─ join:dashboard room            │
-│  ├─ /api/devices              ├─ sensor:update event            │
-│  ├─ /api/sensors              ├─ alarm:new event                │
-│  └─ /api/alarms               └─ device:status event           │
-│                                                                 │
-│  Anomaly Detector Service                                       │
-│  ├─ Noise Analysis (>85dB × 10 consecutive)                    │
-│  ├─ Movement Analysis (accel magnitude >20 × 3 consecutive)    │
-│  ├─ Crowd Density (>15 devices within 50m)                      │
-│  ├─ Restricted Zone (GPS polygon check)                         │
-│  ├─ Device Offline (lastSeen >10 min)                           │
-│  ├─ Risk Score Composite (0-100)                                │
-│  └─ Z-Score Audio Anomaly (rolling window, |z|>2.5)            │
+│                     BACKEND (Node.js)                            │
+│  Express.js REST API           Socket.io Sunucu                  │
+│  ├─ /api/auth                  ├─ join:dashboard                 │
+│  ├─ /api/devices                ├─ sensor:update                 │
+│  ├─ /api/sensors                ├─ alarm:new                      │
+│  └─ /api/alarms                 └─ device:status                 │
+│                                                                    │
+│  Anomali Tespit Servisi                                           │
+│  ├─ Gürültü Analizi (>85dB × 10 ardışık)                          │
+│  ├─ Hareket Analizi (ivme >20 × 3 ardışık)                        │
+│  ├─ Kalabalık Yoğunluğu (50m içinde >15 cihaz)                    │
+│  ├─ Yasaklı Bölge (GPS poligon kontrolü)                          │
+│  ├─ Cihaz Çevrimdışı (son görülme >10 dk)                         │
+│  ├─ Risk Skoru (0-100 bileşik)                                    │
+│  └─ Z-Skoru Ses Anomalisi (kayan pencere, |z|>2.5)                │
 └──────────────────────────┬──────────────────────────────────────┘
-                           │ Mongoose ODM
+                            │ Mongoose ODM
 ┌──────────────────────────▼──────────────────────────────────────┐
-│                    MongoDB Database                             │
-│  Collections: users | devices | sensordatas | alarms           │
+│                      MongoDB (Atlas)                              │
+│  Koleksiyonlar: users | devices | sensordatas | alarms            │
 └─────────────────────────────────────────────────────────────────┘
          ▲
-         │ POST /api/sensors/data (every 2s)
-┌────────┴────────────────────────────────────────────────────────┐
-│                   Mobile Simulator (Node.js)                    │
-│  Scenarios: normal | noise_event | movement | crowd | restricted│
-└─────────────────────────────────────────────────────────────────┘
+         │ POST /api/sensors/data
+┌────────┴───────────────────┬──────────────────────────────────────┐
+│  Mobil Simülatör (Node.js)  │  Mobil Uygulama (Expo / React Native) │
+│  Senaryolar: normal |       │  Gerçek cihaz sensörleri: konum,      │
+│  noise_event | movement |   │  ivmeölçer, mikrofon, pil vb.          │
+│  crowd | restricted         │                                        │
+└──────────────────────────────┴──────────────────────────────────────┘
 ```
 
 ---
 
-## Installation & Running
+## Kurulum ve Çalıştırma (Lokal Geliştirme)
 
-### Prerequisites
+### Gereksinimler
 - Node.js 18+
-- MongoDB (local or Docker)
+- MongoDB (lokal veya Docker)
 - npm
 
-### Option 1 — Without Docker (Development)
-
-**1. Clone & setup:**
-```bash
-git clone <repo-url>
-cd campus-safety-platform
-```
-
-**2. Backend:**
+### Backend
 ```bash
 cd backend
 cp .env.example .env
-# Edit .env — set MONGODB_URI and JWT_SECRET
+# .env içinde MONGODB_URI ve JWT_SECRET'i ayarla
 npm install
-npm run seed          # seed demo data
-npm run dev           # starts on http://localhost:3001
+npm run seed          # demo verisini oluşturur
+npm run dev           # http://localhost:3001
 ```
 
-**3. Frontend (new terminal):**
+### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev           # starts on http://localhost:5173
+npm run dev           # http://localhost:5173
 ```
 
-**4. Simulator (new terminal):**
+### Mobil Uygulama (Expo)
+```bash
+cd mobil
+npm install
+npm start
+```
+`App.js` içindeki `API_URL`, canlı backend'i (`PROD_URL`) kullanacak şekilde ayarlanmıştır. Lokal backend ile test için `LOCAL_URL`'i kendi bilgisayarının IP'siyle güncelleyip `API_URL = LOCAL_URL` yapabilirsin.
+
+### Mobil Simülatör
 ```bash
 cd mobile-simulator
 npm install
 node simulator.js --scenario noise_event
 ```
 
-### Option 2 — With Docker Compose
-
+### Docker ile Çalıştırma
 ```bash
-cd campus-safety-platform
 docker-compose up --build
-```
-
-Then seed the database:
-```bash
 docker exec campus_backend node src/scripts/seed.js
 ```
 
-Access:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3001/api/health
+---
+
+## Bulut Dağıtımı (Render)
+
+Proje, [render.yaml](render.yaml) üzerinden Render Blueprint ile iki servis olarak dağıtılmıştır:
+
+| Servis | Tür | Açıklama |
+|--------|-----|----------|
+| `kampus-guvenlik-backend` | Web Service (Node) | Express API + Socket.io, MongoDB Atlas'a bağlı |
+| `kampus-guvenlik-frontend` | Static Site | React/Vite build çıktısı, SPA yönlendirmesi yapılandırılmış |
+
+Backend ortam değişkenleri: `MONGODB_URI`, `JWT_SECRET`, `JWT_EXPIRES_IN`, `CLIENT_URL`, `NODE_ENV`, `ENABLE_FAKE_SENSORS`.
 
 ---
 
-## Simulator Usage
-
-The simulator acts as a virtual smartphone posting sensor data every 2 seconds.
+## Test
 
 ```bash
-cd mobile-simulator
-npm install
-
-# Basic usage
-node simulator.js --scenario normal
-
-# All scenarios
-node simulator.js --scenario noise_event     # triggers NOISE_ANOMALY alarm
-node simulator.js --scenario movement         # triggers UNUSUAL_MOVEMENT alarm
-node simulator.js --scenario crowd            # simulates dense cluster
-node simulator.js --scenario restricted_zone  # triggers RESTRICTED_ZONE alarm
-
-# Custom device and interval
-node simulator.js --deviceId BTU-099 --scenario noise_event --interval 1000
-
-# Multiple simulators (open multiple terminals)
-node simulator.js --deviceId SIM-A --scenario normal
-node simulator.js --deviceId SIM-B --scenario noise_event
+cd backend
+npm test
 ```
+
+77 test, 5 test paketinde (`auth`, `devices`, `sensors`, `alarms`, ve diğerleri) çalışır ve tamamı geçer.
 
 ---
 
-## API Documentation
+## API Dokümantasyonu
 
-### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Login, returns JWT |
-| GET | `/api/auth/me` | Get current user (protected) |
+Tüm endpoint'ler, parametreler ve örnek yanıtlar için canlı Swagger arayüzü:
+**https://kampus-guvenlik-backend.onrender.com/api/docs**
 
-### Devices
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/devices` | List all devices (admin: all, user: own) |
-| POST | `/api/devices` | Register new device |
-| GET | `/api/devices/:id` | Get device details |
-| PUT | `/api/devices/:id` | Update device |
-| DELETE | `/api/devices/:id` | Delete device (admin only) |
-| GET | `/api/devices/:id/status` | Get device status |
+### Kimlik Doğrulama
+| Metod | Endpoint | Açıklama |
+|-------|----------|----------|
+| POST | `/api/auth/register` | Yeni kullanıcı kaydı |
+| POST | `/api/auth/login` | Giriş, JWT döner |
+| GET | `/api/auth/me` | Mevcut kullanıcı bilgisi (korumalı) |
 
-### Sensors
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/sensors/data` | Submit sensor reading (triggers anomaly detection) |
-| GET | `/api/sensors/data` | Query historical data (filters: deviceId, from, to, limit) |
-| GET | `/api/sensors/latest/:deviceId` | Latest reading for device |
-| GET | `/api/sensors/stats/:deviceId` | 24h statistics |
+### Cihazlar
+| Metod | Endpoint | Açıklama |
+|-------|----------|----------|
+| GET | `/api/devices` | Cihazları listele (admin: tümü, kullanıcı: kendi cihazları) |
+| POST | `/api/devices` | Yeni cihaz kaydet |
+| GET | `/api/devices/:id` | Cihaz detayı |
+| PUT | `/api/devices/:id` | Cihaz güncelle |
+| DELETE | `/api/devices/:id` | Cihaz sil (sadece admin) |
+| GET | `/api/devices/:id/status` | Cihaz durumu |
 
-### Alarms
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/alarms` | List alarms (filters: severity, type, resolved, from, to) |
-| POST | `/api/alarms/:id/resolve` | Mark alarm as resolved (admin/operator) |
-| GET | `/api/alarms/stats` | Alarm statistics |
+### Sensörler
+| Metod | Endpoint | Açıklama |
+|-------|----------|----------|
+| POST | `/api/sensors/data` | Sensör verisi gönder (anomali tespitini tetikler) |
+| GET | `/api/sensors/data` | Geçmiş veriyi sorgula (deviceId, from, to, limit) |
+| GET | `/api/sensors/latest/:deviceId` | Cihazın son okuması |
+| GET | `/api/sensors/stats/:deviceId` | 24 saatlik istatistik |
 
-### Socket.io Events
-| Event | Direction | Description |
-|-------|-----------|-------------|
-| `join:dashboard` | Client → Server | Join dashboard room |
-| `join:device` | Client → Server | Join specific device room |
-| `sensor:update` | Server → Client | New sensor reading |
-| `alarm:new` | Server → Client | New alarm triggered |
-| `device:status` | Server → Client | Device status changed |
+### Alarmlar
+| Metod | Endpoint | Açıklama |
+|-------|----------|----------|
+| GET | `/api/alarms` | Alarmları listele (severity, type, resolved, from, to) |
+| POST | `/api/alarms/:id/resolve` | Alarmı çözüldü olarak işaretle (admin/operatör) |
+| GET | `/api/alarms/stats` | Alarm istatistikleri |
 
-### Response Format
+### Socket.io Olayları
+| Olay | Yön | Açıklama |
+|------|-----|----------|
+| `join:dashboard` | Client → Server | Dashboard odasına katıl |
+| `join:device` | Client → Server | Belirli bir cihaz odasına katıl |
+| `sensor:update` | Server → Client | Yeni sensör okuması |
+| `alarm:new` | Server → Client | Yeni alarm tetiklendi |
+| `device:status` | Server → Client | Cihaz durumu değişti |
+
+### Yanıt Formatı
 ```json
-// Success
+// Başarılı
 { "success": true, "data": { ... } }
 
-// Error
-{ "success": false, "error": "Error message" }
+// Hatalı
+{ "success": false, "error": "Hata mesajı" }
 ```
 
 ---
 
-## Demo Credentials (after seeding)
+## Mobil Uygulama ve Expo Go Kısıtlaması
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@btu.edu.tr | admin123 |
-| Operator | operator1@btu.edu.tr | operator123 |
-| Viewer | viewer@btu.edu.tr | viewer123 |
+Mobil uygulama EAS Update ile yayınlanmıştır, ancak Expo'nun **Mayıs 2026** güncellemesiyle Expo Go artık yalnızca **proje sahibinin kendi hesabıyla** yayınlanan projeleri açabilmektedir. Bu nedenle:
 
----
-
-## Team Task Distribution Template
-
-| Task | Responsible | Status |
-|------|------------|--------|
-| Backend architecture & models | - | ✅ |
-| Authentication & JWT | - | ✅ |
-| Anomaly detection algorithms | - | ✅ |
-| REST API routes | - | ✅ |
-| Socket.io real-time | - | ✅ |
-| React frontend setup | - | ✅ |
-| Dashboard & live charts | - | ✅ |
-| Map view (Leaflet) | - | ✅ |
-| Alarm management UI | - | ✅ |
-| Analytics page | - | ✅ |
-| Mobile simulator | - | ✅ |
-| Docker configuration | - | ✅ |
-| Seed data & testing | - | ✅ |
+- Mobil uygulama canlıya alınmış olsa da, bu sürüme yalnızca geliştirici hesabı üzerinden erişilebilmektedir.
+- Bu kısıtlama proje ayarlarıyla giderilemez; Expo Go istemcisinin genel davranışıdır.
+- Bu yüzden kullanıcı erişimi için **web arayüzü** birincil dağıtım kanalı olarak kullanılmıştır.
+- Mobil uygulama, geliştirici tarafından lokal Expo Go oturumu (`npx expo start`, aynı ağ üzerinden) ile test edilmiştir.
 
 ---
 
-## Known Limitations
+## Bilinen Sınırlamalar
 
-1. **Crowd density analysis** is CPU-intensive for large device counts (queries multiple DB records). In production, consider spatial indexing with MongoDB's `2dsphere` index.
-2. **Simulator** only sends data from a single device per process. Run multiple terminals for crowd simulation.
-3. **Map tiles** require internet connection (OpenStreetMap). No offline fallback.
-4. **Z-score anomaly** requires at least 10 readings per device to activate (cold start).
-5. **Restricted zones** are hardcoded constants. In production, they should be stored in DB and manageable via UI.
-6. **No persistent socket rooms** — after server restart, clients need to reconnect.
+1. **Kalabalık yoğunluğu analizi**, çok sayıda cihaz için CPU yoğun çalışır (birden fazla DB sorgusu). Üretimde MongoDB'nin `2dsphere` indeksi önerilir.
+2. **Simülatör**, her process başına tek cihazdan veri gönderir. Kalabalık simülasyonu için birden fazla terminal gerekir.
+3. **Harita katmanları** internet bağlantısı gerektirir (OpenStreetMap), çevrimdışı desteği yoktur.
+4. **Z-skoru anomalisi**, aktif olması için cihaz başına en az 10 okuma gerektirir (soğuk başlangıç).
+5. **Yasaklı bölgeler** sabit kod (constant) olarak tanımlıdır; üretimde DB'de saklanıp arayüzden yönetilebilmesi gerekir.
+6. **Kalıcı socket odaları yoktur** — sunucu yeniden başladığında istemcilerin yeniden bağlanması gerekir.
+7. Render ücretsiz planı nedeniyle backend inaktiflik sonrası uykuya geçer, ilk istek gecikebilir.
+
+##  Katkıda Bulunanlar
+
+Bu proje, Bursa Teknik Üniversitesi Bilgisayar Mühendisliği Bölümü "Node.js ile Web Programlama" dersi dönem projesi kapsamında aşağıdaki ekip tarafından geliştirilmiştir:
+
+- **Furkan BULDUKLU**
+- **Fuat ÜZÜLMEZ**
+- **Eren BEZEK**
